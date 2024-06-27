@@ -1,7 +1,10 @@
 ﻿@page "/login"
 @using BlazorApp.Model
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
 @inject BlazorApp.Data.MyDBContext DB
-@inject NavigationManager NevManager
+@inject NavigationManager NavManager
 
 <h3>Login</h3>
 
@@ -22,8 +25,12 @@
 
             <div class="mb-3">
                 <label>Jelszó:</label>
-                <InputText @bind-Value="newUser.Password" class="form-control" placeholder="Password" />
+                <InputText @bind-Value="newUser.Password" type="password" class="form-control" placeholder="Password" />
                 <ValidationMessage For="()=>newUser.Password" />
+            </div>
+
+            <div class="mb-3 text-center">
+                <span class="text-danger">@errorMessage</span>
             </div>
 
             <div class="mb-3 d-grid gap-2">
@@ -38,8 +45,40 @@
     [SupplyParameterFromForm]
     private User newUser { get; set; } = new();
 
+    private string errorMessage = string.Empty;
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
     private async Task Authenticate()
     {
-        
+        //kiszűrjük az első felhasználót a DB-ből
+        var userAccount = DB.users.FirstOrDefault(u => u.UserName == newUser.UserName);
+
+        //ellenőrizzük a usert és a password-öt
+        if (userAccount is null || userAccount.Password != newUser.Password)
+        {
+            newUser.UserName = string.Empty;
+            newUser.Password = string.Empty;
+            errorMessage = "A felhasználó név és a jelszó nem egyezik!";
+            return;
+        }
+
+        //Claim használata .Net keretrendszer System.Security.Claims
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, newUser.UserName),
+            new Claim(ClaimTypes.Role, newUser.Role)
+        };
+
+        //igényazonosíto (ClaimsIdentity) obj elkészítése
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+        //követési megbízás elkészítése
+        var principal = new ClaimsPrincipal(identity);
+
+        //és a bejelentkezés:
+        await HttpContext.SignInAsync(principal);
+        NavManager.NavigateTo("/");
     }
 }
