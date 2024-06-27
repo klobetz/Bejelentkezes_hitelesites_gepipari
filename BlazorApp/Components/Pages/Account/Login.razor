@@ -1,0 +1,45 @@
+﻿@page "/login"
+@using BlazorApp.Model
+@inject BlazorApp.Data.MyDBContext DB
+@inject NavigationManager NevManager
+
+<h3>Login</h3>
+
+<div class="row">
+    <div class="col-lg-4 offset-lg-4 pt-4 pb-4 border">
+        <EditForm Model="this" OnValidSubmit="Authenticate" FormName="LoginForm" Enhance>
+            <DataAnnotationsValidator/>
+            <div class="mt-3 text-center flex-column">
+                <img src="/Img/login.png" style="max-height:5rem"/>
+                <h3>Login</h3>
+            </div>
+
+            <div class="mb-3">
+                <label>Felhasználó név:</label>
+                <InputText @bind-Value="newUser.UserName" class="form-control" placeholder="Username"/>
+                <ValidationMessage For="()=>newUser.UserName"/>
+            </div>
+
+            <div class="mb-3">
+                <label>Jelszó:</label>
+                <InputText @bind-Value="newUser.Password" class="form-control" placeholder="Password" />
+                <ValidationMessage For="()=>newUser.Password" />
+            </div>
+
+            <div class="mb-3 d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Login</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+
+    [SupplyParameterFromForm]
+    private User newUser { get; set; } = new();
+
+    private async Task Authenticate()
+    {
+        
+    }
+}
