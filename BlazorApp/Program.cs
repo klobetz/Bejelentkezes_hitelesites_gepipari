@@ -1,5 +1,6 @@
 using BlazorApp.Components;
 using BlazorApp.Data;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +13,18 @@ builder.Services.AddRazorComponents()
 builder.Services.AddDbContext<MyDBContext>(option => 
 option.UseMySQL(builder.Configuration.GetConnectionString("MyConnectionString")));
 
+//autentikációs mehanizmus
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(option =>
+    {
+        option.Cookie.Name = "auth_token";
+        option.LoginPath = "/login";
+        option.Cookie.MaxAge = TimeSpan.FromMinutes(10);
+        option.AccessDeniedPath = "/access-denied";
+    });
+
+builder.Services.AddAuthorization();
+builder.Services.AddCascadingAuthenticationState();
 
 var app = builder.Build();
 
@@ -27,6 +40,11 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
+
+//köztes szoftverek integrálása
+app.UseAuthentication();
+app.UseAuthorization();
+
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
