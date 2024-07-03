@@ -1,0 +1,65 @@
+﻿@page "/usercreate"
+@using BlazorApp.Model
+@using System.Text
+@using System.Security.Cryptography
+@inject BlazorApp.Data.MyDBContext DB
+@inject NavigationManager NavManager
+@attribute [Authorize(Roles ="Administrator")]
+@rendermode InteractiveServer
+
+<h3>UserCreate</h3>
+<hr />
+<div class="row">
+    <div class="col-lg-4 offset-lg-4 pt-4 pb-4 border">
+        <EditForm method="Post" Model="@newUser" OnValidSubmit="AddUser" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <div class="mb-3 text-center flex-column">
+                <img src="/Img/newUser.png" style="max-height:5rem" />
+                <h3>Add User</h3>
+            </div>
+
+            <div class="mb-3">
+                <label>Felhasználó név:</label>
+                <InputText @bind-Value="newUser.UserName" class="form-control" placeholder="Username" />
+                <ValidationMessage For="()=>newUser.UserName" />
+            </div>
+
+            <div class="mb-3">
+                <label>Jelszó:</label>
+                <InputText @bind-Value="newUser.Password" type="password" class="form-control" placeholder="Password" />
+                <ValidationMessage For="()=>newUser.Password" />
+            </div>
+
+            <div class="mb-3">
+                <label>Jogkör</label>
+                <InputSelect @bind-Value="newUser.Role">
+                    <option>---</option>
+                    <option>Administrator</option>
+                    <option>User</option>
+                    <option>Manager</option>
+                </InputSelect>
+            </div>
+
+            <div class="mb-3 d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Add</button>
+            </div>
+
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    public User newUser { get; set; } = new();
+
+    private async Task AddUser()
+    {
+        if (!string.IsNullOrWhiteSpace(newUser.Password))
+        {
+            newUser.Password = BitConverter.ToString(SHA512.HashData(Encoding.Default.GetBytes(newUser.Password))).Replace("-","");
+        }
+        await DB.users.AddAsync(newUser);
+        await DB.SaveChangesAsync();
+        NavManager.NavigateTo("/");
+    }
+}

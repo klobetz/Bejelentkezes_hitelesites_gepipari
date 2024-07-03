@@ -1,5 +1,7 @@
 ﻿@page "/counter"
 @rendermode InteractiveServer
+@inject IJSRuntime Jsr
+@attribute [Authorize(Roles = "Administrator, User")]
 
 <PageTitle>Counter</PageTitle>
 
@@ -9,11 +11,28 @@
 
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
+<AuthorizeView Roles="Administrator">
+    <Authorized>
+        <br />
+        <button class="btn btn-primary" @onclick="displayUser">Mutasd a felhasználó nevét</button>
+    </Authorized>
+</AuthorizeView>
+
 @code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+
     private int currentCount = 0;
 
     private void IncrementCount()
     {
         currentCount++;
     }
+
+    private async Task displayUser()
+    {
+        var authenticationState = await authenticationStateTask;
+        var message = $"Helló: {authenticationState.User.Identity.Name}";
+        await Jsr.InvokeVoidAsync("alert", message);   }
+
 }

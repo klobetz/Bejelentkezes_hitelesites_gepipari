@@ -2,6 +2,32 @@
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="row">
+    <div class="col-12">
+        <h2>Üdvözöllek az oldalon!</h2>
+    </div>
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <AuthorizeView>
+                    <NotAuthorized>
+                        <span> <img src="/Img/danger.png"  style="max-height:5rem"/>
+                            Nem vagy hitelesítve! Az oldal használatához jelentkezz be!<br /> <a href="/login" class="btn btn-primary mt-3">Login</a>
+                        </span>
+                    </NotAuthorized>
+                    <Authorized>
+                        <span>
+                            Felhasználó: @context.User.Identity.Name<br/>
+                            <a href="/logout" class="btn btn-primary mt-3">Logout</a>
+                        </span>
+                    </Authorized>
 
-Welcome to your new app.
+                </AuthorizeView>
+                
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

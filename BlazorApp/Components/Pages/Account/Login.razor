@@ -3,6 +3,8 @@
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Authentication.Cookies
+@using System.Security.Cryptography
+@using System.Text
 @inject BlazorApp.Data.MyDBContext DB
 @inject NavigationManager NavManager
 
@@ -41,19 +43,26 @@
 </div>
 
 @code {
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
 
     [SupplyParameterFromForm]
     private User newUser { get; set; } = new();
 
     private string errorMessage = string.Empty;
 
-    [CascadingParameter]
-    public HttpContext? HttpContext { get; set; }
+    
 
     private async Task Authenticate()
     {
         //kiszűrjük az első felhasználót a DB-ből
         var userAccount = DB.users.FirstOrDefault(u => u.UserName == newUser.UserName);
+
+        //Hash password
+        if (!string.IsNullOrWhiteSpace(newUser.Password))
+        {
+            newUser.Password = BitConverter.ToString(SHA512.HashData(Encoding.Default.GetBytes(newUser.Password))).Replace("-", "");
+        }
 
         //ellenőrizzük a usert és a password-öt
         if (userAccount is null || userAccount.Password != newUser.Password)
@@ -68,7 +77,7 @@
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, newUser.UserName),
-            new Claim(ClaimTypes.Role, newUser.Role)
+            new Claim(ClaimTypes.Role, userAccount.Role)
         };
 
         //igényazonosíto (ClaimsIdentity) obj elkészítése
